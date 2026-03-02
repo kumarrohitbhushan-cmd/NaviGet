@@ -69,7 +69,7 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, on
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.onload = () => {
       const options = {
-        key: 'rzp_test_placeholder',
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_SMIZyCKFSoApcm',
         amount: fare * 100,
         currency: 'INR',
         name: 'NaviGet',
