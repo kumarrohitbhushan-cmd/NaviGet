@@ -40,7 +40,6 @@ export default function PlacesAutocomplete({
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Nominatim search with debounce
   const searchPlaces = useCallback((query: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (query.length < 3) {
@@ -84,7 +83,6 @@ export default function PlacesAutocomplete({
     setSuggestions([]);
   };
 
-  // Close suggestions on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -103,16 +101,9 @@ export default function PlacesAutocomplete({
         value={value}
         onChange={(e) => handleInputChange(e.target.value)}
         onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
-        className="input-field text-[14px] pr-8 pl-9"
+        className="input-field text-[14px] pr-8 pl-4"
         autoComplete="off"
       />
-      <div className="absolute left-3 top-1/2 -translate-y-1/2">
-        {type === 'pickup' ? (
-          <Navigation className="w-3.5 h-3.5 text-accent-green" />
-        ) : (
-          <MapPin className="w-3.5 h-3.5 text-red-400" />
-        )}
-      </div>
       {value && (
         <button
           onClick={() => { onChange(''); setSuggestions([]); setShowSuggestions(false); }}
@@ -124,8 +115,8 @@ export default function PlacesAutocomplete({
 
       {/* Suggestions dropdown */}
       {showSuggestions && (
-        <div className="absolute top-full left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-xl z-[2000]"
-          style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+        <div className="absolute top-full left-0 right-0 mt-1 rounded-xl overflow-hidden z-[2000] bg-white"
+          style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.12)', border: '1px solid var(--border)' }}>
           {loading && (
             <div className="px-3 py-2 text-xs text-[var(--text-muted)]">Searching...</div>
           )}
@@ -137,9 +128,11 @@ export default function PlacesAutocomplete({
               <button
                 key={s.place_id}
                 onClick={() => handleSelect(s)}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-[var(--surface-3)]"
+                className="w-full flex items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-[#F6F6F6]"
               >
-                <MapPin className="w-4 h-4 text-brand shrink-0" />
+                <div className="w-8 h-8 rounded-full bg-[#F6F6F6] flex items-center justify-center flex-shrink-0">
+                  <MapPin className="w-4 h-4 text-[var(--text-secondary)]" />
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-[var(--text-primary)] truncate">{main}</p>
                   <p className="text-[11px] text-[var(--text-muted)] truncate">{sub}</p>

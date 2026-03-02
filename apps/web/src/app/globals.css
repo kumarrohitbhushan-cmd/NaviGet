@@ -5,35 +5,41 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Light theme — single theme */
-html { background: #F8F7FF; }
+/* Clean light theme */
+html { background: #FFFFFF; }
 
 @layer base {
   :root {
-    --bg: #F8F7FF;
+    --bg: #FFFFFF;
+    --bg-secondary: #F6F6F6;
     --brand: #6C5CE7;
     --brand-light: #8B7CF6;
     --brand-dark: #5A4BD1;
-    --brand-alpha: rgba(108, 92, 231, 0.1);
+    --brand-alpha: rgba(108, 92, 231, 0.08);
     --accent: #0090B3;
-    --accent-green: #00A65A;
-    --surface: #F8F7FF;
+    --accent-green: #059669;
+    --surface: #FFFFFF;
     --surface-2: #FFFFFF;
-    --surface-3: #EEEDF5;
-    --border: #DDD9EE;
-    --text-primary: #1A1726;
-    --text-secondary: rgba(26, 23, 38, 0.6);
-    --text-muted: rgba(26, 23, 38, 0.35);
-    --card-glass-bg: rgba(255, 255, 255, 0.9);
-    --card-glass-border: rgba(108, 92, 231, 0.1);
-    --input-bg: #EEEDF5;
-    --input-border: #DDD9EE;
-    --menu-hover: rgba(108, 92, 231, 0.05);
-    --btn-gradient: linear-gradient(135deg, #6C5CE7 0%, #8B7CF6 100%);
-    --btn-shadow: rgba(108, 92, 231, 0.2);
-    --usp-bg: rgba(108, 92, 231, 0.08);
-    --usp-border: rgba(108, 92, 231, 0.12);
-    --usp-text: #6C5CE7;
+    --surface-3: #F6F6F6;
+    --border: #EBEBEB;
+    --border-strong: #D4D4D4;
+    --text-primary: #000000;
+    --text-secondary: #545454;
+    --text-muted: #A0A0A0;
+    --card-glass-bg: #FFFFFF;
+    --card-glass-border: #EBEBEB;
+    --input-bg: #F6F6F6;
+    --input-border: #EBEBEB;
+    --menu-hover: #F6F6F6;
+    --btn-gradient: linear-gradient(135deg, #6C5CE7 0%, #7B6CF0 100%);
+    --btn-shadow: rgba(108, 92, 231, 0.25);
+    --usp-bg: #F6F6F6;
+    --usp-border: #EBEBEB;
+    --usp-text: #545454;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.1);
+    --shadow-xl: 0 20px 60px rgba(0,0,0,0.12);
     color-scheme: light;
   }
 
@@ -48,13 +54,12 @@ html { background: #F8F7FF; }
   }
 
   body {
-    background: var(--surface);
+    background: var(--bg);
     color: var(--text-primary);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overscroll-behavior: none;
-    transition: background 0.3s ease, color 0.3s ease;
   }
 
   html, body {
@@ -68,25 +73,35 @@ html { background: #F8F7FF; }
 }
 
 @layer components {
+  /* ===== BUTTONS ===== */
   .btn-primary {
-    @apply font-semibold py-3.5 px-6 rounded-2xl w-full text-center
+    @apply font-semibold py-4 px-6 rounded-xl w-full text-center
            transition-all duration-200 active:scale-[0.98]
            disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100;
-    background: var(--btn-gradient);
+    background: var(--text-primary);
     color: white;
-    box-shadow: 0 4px 20px var(--btn-shadow);
+    font-size: 15px;
+    letter-spacing: 0.01em;
   }
 
   .btn-primary:hover:not(:disabled) {
-    box-shadow: 0 6px 28px var(--btn-shadow);
+    opacity: 0.9;
+  }
+
+  .btn-primary-brand {
+    @apply font-semibold py-4 px-6 rounded-xl w-full text-center
+           transition-all duration-200 active:scale-[0.98]
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100;
+    background: var(--brand);
+    color: white;
+    font-size: 15px;
   }
 
   .btn-secondary {
-    @apply font-medium py-3.5 px-6 rounded-2xl w-full text-center
+    @apply font-medium py-3.5 px-6 rounded-xl w-full text-center
            transition-all duration-200 active:scale-[0.98];
-    color: var(--text-secondary);
+    color: var(--text-primary);
     background: var(--surface-3);
-    border: 1px solid var(--border);
   }
 
   .btn-ghost {
@@ -100,13 +115,15 @@ html { background: #F8F7FF; }
     background: var(--menu-hover);
   }
 
+  /* ===== INPUTS ===== */
   .input-field {
-    @apply w-full rounded-2xl px-4 py-3.5
+    @apply w-full rounded-xl px-4 py-3
            focus:outline-none
            transition-all duration-200;
     color: var(--text-primary);
     background: var(--input-bg);
-    border: 1.5px solid var(--input-border);
+    border: 1.5px solid transparent;
+    font-size: 15px;
   }
 
   .input-field::placeholder {
@@ -114,10 +131,12 @@ html { background: #F8F7FF; }
   }
 
   .input-field:focus {
-    border-color: var(--brand);
-    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+    border-color: var(--text-primary);
+    background: var(--bg);
+    box-shadow: none;
   }
 
+  /* ===== CARDS ===== */
   .card {
     @apply rounded-2xl p-4;
     background: var(--surface-2);
@@ -125,61 +144,72 @@ html { background: #F8F7FF; }
   }
 
   .card-glass {
-    @apply rounded-2xl p-4 backdrop-blur-xl;
+    @apply rounded-2xl p-4;
     background: var(--card-glass-bg);
     border: 1px solid var(--card-glass-border);
+    box-shadow: var(--shadow-sm);
   }
 
+  .card-elevated {
+    @apply rounded-2xl p-4;
+    background: var(--surface-2);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* ===== BADGES ===== */
   .badge {
-    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold;
   }
 
   .badge-brand {
     @apply badge;
     background: var(--brand-alpha);
-    color: var(--brand-light);
+    color: var(--brand);
   }
 
   .badge-green {
     @apply badge;
-    background: rgba(0, 230, 118, 0.12);
-    color: #00E676;
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
   }
 
   .badge-red {
     @apply badge;
-    background: rgba(255, 82, 82, 0.12);
-    color: #FF5252;
+    background: rgba(239, 68, 68, 0.1);
+    color: #DC2626;
   }
 
   .badge-blue {
     @apply badge;
-    background: rgba(0, 210, 255, 0.12);
-    color: #00D2FF;
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563EB;
   }
 
+  /* ===== BOTTOM SHEET ===== */
   .bottom-sheet {
-    @apply fixed bottom-0 left-0 right-0 rounded-t-3xl p-6 z-50 animate-slide-up
+    @apply fixed bottom-0 left-0 right-0 rounded-t-2xl p-5 z-50 animate-slide-up
            max-w-lg mx-auto;
     background: var(--surface-2);
-    border-top: 1px solid var(--border);
+    box-shadow: var(--shadow-xl);
   }
 
   .bottom-sheet-handle {
-    @apply w-10 h-1 rounded-full mx-auto mb-5;
-    background: var(--text-muted);
+    @apply w-9 h-1 rounded-full mx-auto mb-4;
+    background: #D4D4D4;
   }
 
+  /* ===== PILLS ===== */
   .usp-pill {
-    @apply inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full
-           text-sm font-medium whitespace-nowrap;
-    background: var(--usp-bg);
-    color: var(--usp-text);
-    border: 1px solid var(--usp-border);
+    @apply inline-flex items-center gap-1.5 px-3 py-2 rounded-full
+           text-[13px] font-medium whitespace-nowrap;
+    background: var(--surface-3);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
   }
 
+  /* ===== MENU ===== */
   .menu-item {
-    @apply flex items-center gap-4 px-4 py-3.5 rounded-2xl
+    @apply flex items-center gap-3.5 px-3 py-3 rounded-xl
            transition-all duration-150 active:scale-[0.98] cursor-pointer;
   }
 
@@ -187,23 +217,9 @@ html { background: #F8F7FF; }
     background: var(--menu-hover);
   }
 
-  .glow-brand {
-    box-shadow: 0 0 40px var(--brand-alpha);
-  }
-
-  .glow-accent {
-    box-shadow: 0 0 30px rgba(0, 210, 255, 0.15);
-  }
-
-  .gradient-brand {
-    background: var(--btn-gradient);
-  }
-
+  /* ===== UTILITIES ===== */
   .gradient-mesh {
-    background: 
-      radial-gradient(ellipse at 20% 50%, rgba(108, 92, 231, 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 20%, rgba(0, 144, 179, 0.05) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 80%, rgba(139, 124, 246, 0.04) 0%, transparent 50%);
+    background: var(--bg);
   }
 
   .shimmer {
@@ -212,12 +228,12 @@ html { background: #F8F7FF; }
     animation: shimmer 1.5s ease-in-out infinite;
   }
 
+  /* ===== KEYFRAMES ===== */
   @keyframes shimmer {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
   }
 
-  /* Drawer animation */
   @keyframes slideInLeft {
     from { transform: translateX(-100%); }
     to { transform: translateX(0); }
@@ -229,7 +245,7 @@ html { background: #F8F7FF; }
   }
 
   @keyframes splashPulse {
-    0%, 100% { opacity: 0.2; transform: scale(0.8); }
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
     50% { opacity: 1; transform: scale(1.2); }
   }
 
@@ -237,32 +253,20 @@ html { background: #F8F7FF; }
   .radar-ring {
     position: absolute;
     border-radius: 50%;
-    border: 1.5px solid rgba(108, 92, 231, 0.25);
+    border: 2px solid rgba(108, 92, 231, 0.2);
     animation: radarExpand 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
   }
 
-  .radar-ring-1 {
-    width: 90px; height: 90px;
-    animation-delay: 0s;
-  }
-  .radar-ring-2 {
-    width: 90px; height: 90px;
-    animation-delay: 0.6s;
-  }
-  .radar-ring-3 {
-    width: 90px; height: 90px;
-    animation-delay: 1.2s;
-  }
-  .radar-ring-4 {
-    width: 90px; height: 90px;
-    animation-delay: 1.8s;
-  }
+  .radar-ring-1 { width: 90px; height: 90px; animation-delay: 0s; }
+  .radar-ring-2 { width: 90px; height: 90px; animation-delay: 0.6s; }
+  .radar-ring-3 { width: 90px; height: 90px; animation-delay: 1.2s; }
+  .radar-ring-4 { width: 90px; height: 90px; animation-delay: 1.8s; }
 
   @keyframes radarExpand {
     0% {
       width: 80px; height: 80px;
       opacity: 0.6;
-      border-color: rgba(108, 92, 231, 0.4);
+      border-color: rgba(108, 92, 231, 0.35);
     }
     100% {
       width: 260px; height: 260px;
@@ -280,8 +284,8 @@ html { background: #F8F7FF; }
     background: conic-gradient(
       from 0deg,
       transparent 0deg,
-      rgba(108, 92, 231, 0.12) 30deg,
-      rgba(108, 92, 231, 0.03) 60deg,
+      rgba(108, 92, 231, 0.1) 30deg,
+      rgba(108, 92, 231, 0.02) 60deg,
       transparent 80deg
     );
     border-radius: 0 100% 0 0;
@@ -299,7 +303,7 @@ html { background: #F8F7FF; }
   }
 
   @keyframes driverFloat {
-    0%, 100% { transform: translateY(0px); opacity: 0.7; }
+    0%, 100% { transform: translateY(0px); opacity: 0.6; }
     50% { transform: translateY(-6px); opacity: 1; }
   }
 

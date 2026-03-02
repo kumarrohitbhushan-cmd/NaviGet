@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import NaviGetLogo from '@/components/icons/NaviGetLogo';
-import { ChevronRight, Shield, Phone } from 'lucide-react';
+import { ChevronRight, Shield } from 'lucide-react';
 
 export default function LoginPage() {
   const [phone, setPhone] = useState('');
@@ -11,7 +11,6 @@ export default function LoginPage() {
   const handleLogin = async () => {
     if (phone.length !== 10) return;
     setLoading(true);
-    // Dummy login — no OTP required
     await new Promise((r) => setTimeout(r, 800));
     localStorage.setItem('navigate_auth', JSON.stringify({
       phone: `+91${phone}`,
@@ -22,63 +21,51 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col gradient-mesh">
-      {/* Top section with logo */}
+    <div className="min-h-[100dvh] flex flex-col bg-white">
+      {/* Top section */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8">
-        {/* Animated background glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full opacity-20 blur-[80px]"
-          style={{ background: 'linear-gradient(135deg, #6C5CE7, #00D2FF)' }}
-        />
-
-        {/* Logo */}
-        <div className="relative animate-float mb-8">
+        <div className="mb-8">
           <NaviGetLogo size="xl" />
         </div>
 
-        {/* Tagline */}
-        <p className="text-[var(--text-muted)] text-sm font-medium tracking-wide uppercase mb-2">
-          Navigate Smarter
-        </p>
-        <h1 className="text-2xl font-bold text-center text-[var(--text-primary)] mb-1">
+        <h1 className="text-2xl font-bold text-center text-[var(--text-primary)] mb-2">
           Fixed fares. Zero surge.
         </h1>
-        <p className="text-[var(--text-muted)] text-center text-sm">
-          Same price whether it's 2 AM or 2 PM
+        <p className="text-[var(--text-muted)] text-center text-sm mb-8">
+          Same price whether it&apos;s 2 AM or 2 PM
         </p>
 
-        {/* USP pills */}
-        <div className="flex flex-wrap justify-center gap-2 mt-6">
+        {/* USP chips */}
+        <div className="flex flex-wrap justify-center gap-2">
           {['Fixed Fare 24×7', 'No Surge', '2× Refund', '₹0 Cancel'].map((usp) => (
-            <span key={usp} className="usp-pill text-xs">{usp}</span>
+            <span key={usp} className="px-3 py-1.5 rounded-full text-xs font-medium text-[var(--text-secondary)] bg-[#F6F6F6]">
+              {usp}
+            </span>
           ))}
         </div>
       </div>
 
       {/* Bottom card */}
-      <div className="px-4 pb-8">
-        <div className="card-glass p-6 space-y-5">
+      <div className="px-5 pb-8">
+        <div className="space-y-5">
           <div>
-            <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-1">Get started</h2>
+            <h2 className="text-lg font-bold text-[var(--text-primary)] mb-1">Get started</h2>
             <p className="text-sm text-[var(--text-muted)]">Enter your phone number to continue</p>
           </div>
 
           <div className="flex gap-2">
-            <div className="flex items-center justify-center px-3.5 rounded-2xl text-sm font-medium text-[var(--text-secondary)]"
-              style={{ background: 'var(--surface-3)', border: '1.5px solid var(--border)' }}>
+            <div className="flex items-center justify-center px-4 rounded-xl text-sm font-medium text-[var(--text-primary)] bg-[#F6F6F6]">
               +91
             </div>
-            <div className="relative flex-1">
-              <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
-              <input
-                type="tel"
-                inputMode="numeric"
-                placeholder="Phone number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                className="input-field pl-10 text-[15px]"
-                autoFocus
-              />
-            </div>
+            <input
+              type="tel"
+              inputMode="numeric"
+              placeholder="Phone number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              className="input-field flex-1"
+              autoFocus
+            />
           </div>
 
           <button
@@ -96,9 +83,9 @@ export default function LoginPage() {
             )}
           </button>
 
-          <div className="flex items-center justify-center gap-1.5 pt-1">
+          <div className="flex items-center justify-center gap-1.5">
             <Shield className="w-3 h-3 text-[var(--text-muted)]" />
-            <p className="text-[11px] text-[var(--text-muted)] tracking-wide">
+            <p className="text-[11px] text-[var(--text-muted)]">
               Demo mode — no OTP required
             </p>
           </div>

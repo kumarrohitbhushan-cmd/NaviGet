@@ -15,7 +15,8 @@ import {
   Users,
   Search,
   LocateFixed,
-  Sparkles,
+  Menu,
+  Bell,
 } from 'lucide-react';
 
 export default function BookingPage() {
@@ -81,14 +82,8 @@ export default function BookingPage() {
   const handleVehicleSelect = (vehicleType: string, fare: number) => {
     setSelectedVehicle({ type: vehicleType, fare });
     setShowVehicles(false);
-    // Save booking data for tracking page
     sessionStorage.setItem('booking_data', JSON.stringify({
-      pickup,
-      drop,
-      pickupCoords,
-      dropCoords,
-      vehicleType,
-      fare,
+      pickup, drop, pickupCoords, dropCoords, vehicleType, fare,
     }));
     setShowRadar(true);
   };
@@ -110,7 +105,6 @@ export default function BookingPage() {
       (position) => {
         const coords = { lat: position.coords.latitude, lng: position.coords.longitude };
         setPickupCoords(coords);
-        // Reverse geocode using Nominatim (free)
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}&zoom=18`)
           .then(res => res.json())
           .then(data => {
@@ -126,76 +120,68 @@ export default function BookingPage() {
             setLocatingMe(false);
           });
       },
-      () => {
-        setLocatingMe(false);
-      },
+      () => { setLocatingMe(false); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col" style={{ background: 'var(--surface)' }}>
+    <div className="min-h-[100dvh] flex flex-col bg-white">
       {/* ===== HEADER ===== */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl px-4 py-3 flex items-center justify-between"
-        style={{ background: 'rgba(19, 17, 28, 0.88)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-        {/* Profile Avatar */}
+      <header className="sticky top-0 z-40 bg-white px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
         <button
           onClick={() => setShowProfileDrawer(true)}
-          className="w-10 h-10 rounded-full flex items-center justify-center
+          className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center
                      transition-all duration-200 active:scale-95"
-          style={{
-            background: 'linear-gradient(135deg, #6C5CE7 0%, #A29BFE 100%)',
-            boxShadow: '0 2px 12px rgba(108, 92, 231, 0.3)',
-          }}
         >
-          <span className="text-sm font-bold text-[var(--text-primary)]">{userName}</span>
+          <Menu className="w-5 h-5 text-[var(--text-primary)]" />
         </button>
 
         <NaviGetLogo size="sm" />
 
-        <button className="w-10 h-10 rounded-full flex items-center justify-center"
-          style={{ background: 'var(--surface-3)' }}>
-          <Sparkles className="w-4 h-4 text-brand-400" />
+        <button className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center relative">
+          <Bell className="w-5 h-5 text-[var(--text-primary)]" />
+          <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[var(--brand)]" />
         </button>
       </header>
 
       {/* ===== MAP VIEW ===== */}
       <div className="relative">
-        <MapView pickupCoords={pickupCoords} dropCoords={dropCoords} height="14rem" />
+        <MapView pickupCoords={pickupCoords} dropCoords={dropCoords} height="38dvh" />
         
-        {/* Locate me button */}
+        {/* Locate me FAB */}
         <button
           onClick={handleLocateMe}
           disabled={locatingMe}
-          className="absolute bottom-4 right-4 w-11 h-11 rounded-full flex items-center justify-center
-                         shadow-lg transition-all active:scale-95 z-10"
-          style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+          className="absolute bottom-4 right-4 w-12 h-12 rounded-full flex items-center justify-center
+                     shadow-lg transition-all active:scale-95 z-10 bg-white"
+          style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.15)' }}
+        >
           {locatingMe ? (
-            <div className="w-5 h-5 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
           ) : (
-            <LocateFixed className="w-5 h-5 text-brand-400" />
+            <LocateFixed className="w-5 h-5 text-[var(--text-primary)]" />
           )}
         </button>
       </div>
 
       {/* ===== BOOKING CARD ===== */}
-      <div className="relative -mt-6 z-10 px-4 flex-1 flex flex-col">
-        <div className="card-glass p-5 space-y-4">
+      <div className="relative -mt-5 z-10 flex-1 flex flex-col">
+        <div className="bg-white rounded-t-2xl px-5 pt-5 pb-4 flex-1 flex flex-col" style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.06)' }}>
+          {/* Greeting */}
+          <h2 className="text-[22px] font-bold text-[var(--text-primary)] mb-4">Where to?</h2>
+
           {/* Route Inputs */}
-          <div className="flex gap-3">
-            {/* Route dots */}
-            <div className="flex flex-col items-center pt-3.5 gap-0.5">
-              <div className="w-3 h-3 rounded-full" style={{ background: '#00E676', boxShadow: '0 0 8px rgba(0,230,118,0.4)' }} />
-              <div className="flex flex-col gap-0.5 py-1">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="w-0.5 h-1.5 rounded-full bg-white/10" />
-                ))}
-              </div>
-              <div className="w-3 h-3 rounded-sm rotate-45" style={{ background: '#FF5252', boxShadow: '0 0 8px rgba(255,82,82,0.4)' }} />
+          <div className="flex gap-3 mb-4">
+            {/* Route timeline */}
+            <div className="flex flex-col items-center pt-3 gap-0">
+              <div className="w-2.5 h-2.5 rounded-full bg-[var(--text-primary)]" />
+              <div className="w-0.5 flex-1 my-1 bg-[#E0E0E0]" />
+              <div className="w-2.5 h-2.5 rounded-sm rotate-45 bg-[var(--brand)]" />
             </div>
 
-            {/* Autocomplete Input fields */}
-            <div className="flex-1 space-y-2.5">
+            {/* Input fields */}
+            <div className="flex-1 space-y-2">
               <PlacesAutocomplete
                 value={pickup}
                 onChange={(v) => { setPickup(v); if (!v) setPickupCoords(null); }}
@@ -214,17 +200,15 @@ export default function BookingPage() {
           </div>
 
           {/* Quick actions */}
-          <div className="flex gap-2">
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-medium
-                             text-[var(--text-secondary)] transition-all active:scale-[0.98]"
-              style={{ background: 'var(--surface-3)', border: '1px solid var(--border)' }}>
-              <Clock className="w-3.5 h-3.5" />
+          <div className="flex gap-2 mb-4">
+            <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium
+                             text-[var(--text-primary)] bg-[#F6F6F6] transition-all active:scale-[0.98]">
+              <Clock className="w-4 h-4" />
               Schedule
             </button>
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-medium
-                             text-[var(--text-secondary)] transition-all active:scale-[0.98]"
-              style={{ background: 'var(--surface-3)', border: '1px solid var(--border)' }}>
-              <Users className="w-3.5 h-3.5" />
+            <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium
+                             text-[var(--text-primary)] bg-[#F6F6F6] transition-all active:scale-[0.98]">
+              <Users className="w-4 h-4" />
               Share Ride
             </button>
           </div>
@@ -233,40 +217,41 @@ export default function BookingPage() {
           <button
             onClick={handleFindRides}
             disabled={!pickupCoords || !dropCoords}
-            className="btn-primary flex items-center justify-center gap-2 text-[15px]"
+            className="btn-primary flex items-center justify-center gap-2"
           >
-            <Search className="w-4 h-4" />
+            <Search className="w-4.5 h-4.5" />
             Find rides
           </button>
-        </div>
 
-        {/* ===== USP FOOTER ===== */}
-        {!showVehicles && !showRadar && (
-          <div className="mt-4 mb-6">
-            <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
-              <div className="flex gap-2 min-w-max pb-2">
+          {/* ===== USP SECTION ===== */}
+          {!showVehicles && !showRadar && (
+            <div className="mt-5 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+              <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Why NaviGet?</p>
+              <div className="grid grid-cols-3 gap-2">
                 {[
-                  { icon: '💰', text: 'Fixed Fare 24×7' },
-                  { icon: '🚫', text: 'No Surge' },
-                  { icon: '💸', text: '2× Refund' },
-                  { icon: '👥', text: 'Share from ₹399' },
-                  { icon: '⏰', text: 'Schedule 2h Ahead' },
-                  { icon: '✅', text: '₹0 Cancel' },
+                  { icon: '💰', text: 'Fixed Fare', sub: '24×7' },
+                  { icon: '🚫', text: 'No Surge', sub: 'Ever' },
+                  { icon: '💸', text: '2× Refund', sub: 'Guaranteed' },
+                  { icon: '👥', text: 'Shared', sub: 'from ₹399' },
+                  { icon: '⏰', text: 'Schedule', sub: '2h ahead' },
+                  { icon: '✅', text: '₹0 Cancel', sub: 'Always' },
                 ].map((usp) => (
-                  <span key={usp.text} className="usp-pill text-xs">
-                    <span>{usp.icon}</span> {usp.text}
-                  </span>
+                  <div key={usp.text} className="flex flex-col items-center p-3 rounded-xl bg-[#F6F6F6]">
+                    <span className="text-lg mb-1">{usp.icon}</span>
+                    <span className="text-xs font-semibold text-[var(--text-primary)]">{usp.text}</span>
+                    <span className="text-[10px] text-[var(--text-muted)]">{usp.sub}</span>
+                  </div>
                 ))}
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ===== VEHICLE SELECTION BOTTOM SHEET ===== */}
       {showVehicles && pickupCoords && dropCoords && (
         <>
-          <div className="fixed inset-0 bg-black/50 z-40 animate-fade-in" onClick={() => setShowVehicles(false)} />
+          <div className="fixed inset-0 bg-black/40 z-[5000] animate-fade-in" onClick={() => setShowVehicles(false)} />
           <VehicleSelector
             pickup={pickup}
             drop={drop}

@@ -27,12 +27,12 @@ module.exports = {
           pink: '#FF4081',
         },
         surface: {
-          DEFAULT: '#13111C',
-          2: '#1C1A27',
-          3: '#252236',
-          4: '#2D2A3E',
+          DEFAULT: '#F8F7FF',
+          2: '#FFFFFF',
+          3: '#F0EEF6',
+          4: '#E8E6F0',
         },
-        border: '#2D2A3E',
+        border: '#E2DFF0',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
