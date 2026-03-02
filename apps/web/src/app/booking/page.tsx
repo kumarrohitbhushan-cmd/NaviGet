@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import NaviGetLogo from '@/components/icons/NaviGetLogo';
 import ProfileDrawer from '@/components/profile/ProfileDrawer';
+import VehicleSelector from '@/components/booking/VehicleSelector';
 import RadarSearchOverlay from '@/components/booking/RadarSearchOverlay';
 import PlacesAutocomplete, { PlaceResult } from '@/components/map/PlacesAutocomplete';
 import dynamic from 'next/dynamic';
@@ -23,8 +24,10 @@ export default function BookingPage() {
   const [drop, setDrop] = useState('');
   const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [dropCoords, setDropCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [showVehicles, setShowVehicles] = useState(false);
   const [showRadar, setShowRadar] = useState(false);
   const [showProfileDrawer, setShowProfileDrawer] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<{ type: string; fare: number } | null>(null);
   const [userName, setUserName] = useState('U');
   const [locatingMe, setLocatingMe] = useState(false);
 
@@ -72,14 +75,20 @@ export default function BookingPage() {
 
   const handleFindRides = () => {
     if (!pickup || !drop || !pickupCoords || !dropCoords) return;
+    setShowVehicles(true);
+  };
+
+  const handleVehicleSelect = (vehicleType: string, fare: number) => {
+    setSelectedVehicle({ type: vehicleType, fare });
+    setShowVehicles(false);
     // Save booking data for tracking page
     sessionStorage.setItem('booking_data', JSON.stringify({
       pickup,
       drop,
       pickupCoords,
       dropCoords,
-      vehicleType: 'SEDAN',
-      fare: 229,
+      vehicleType,
+      fare,
     }));
     setShowRadar(true);
   };
@@ -232,7 +241,7 @@ export default function BookingPage() {
         </div>
 
         {/* ===== USP FOOTER ===== */}
-        {!showRadar && (
+        {!showVehicles && !showRadar && (
           <div className="mt-4 mb-6">
             <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
               <div className="flex gap-2 min-w-max pb-2">
@@ -253,6 +262,21 @@ export default function BookingPage() {
           </div>
         )}
       </div>
+
+      {/* ===== VEHICLE SELECTION BOTTOM SHEET ===== */}
+      {showVehicles && pickupCoords && dropCoords && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-40 animate-fade-in" onClick={() => setShowVehicles(false)} />
+          <VehicleSelector
+            pickup={pickup}
+            drop={drop}
+            pickupCoords={pickupCoords}
+            dropCoords={dropCoords}
+            onSelect={handleVehicleSelect}
+            onClose={() => setShowVehicles(false)}
+          />
+        </>
+      )}
 
       {/* ===== RADAR SEARCH OVERLAY ===== */}
       {showRadar && (
