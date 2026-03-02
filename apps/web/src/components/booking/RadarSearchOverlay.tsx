@@ -386,8 +386,8 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, on
                     <Clock className="w-5 h-5 text-[#FF9100]" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-[#FF9100]">Pay Later selected</p>
-                    <p className="text-[11px] text-[var(--text-muted)]">Pay after ride ends</p>
+                    <p className="text-sm font-semibold text-[#FF9100]">Pay Later / COD selected</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">Pay cash after ride ends</p>
                   </div>
                 </div>
               ) : (
@@ -423,8 +423,8 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, on
                       <Clock className="w-5 h-5 text-[#FF9100]" />
                     </div>
                     <div className="flex-1 text-left">
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">Pay Later</p>
-                      <p className="text-[11px] text-[var(--text-muted)]">Pay after your ride ends</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">Pay Later / Cash On Delivery (COD)</p>
+                      <p className="text-[11px] text-[var(--text-muted)]">Pay cash after your ride ends</p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
                   </button>
