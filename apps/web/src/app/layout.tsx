@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="max-w-lg mx-auto relative min-h-[100dvh]">
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
