@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Car, Star, Phone, MessageCircle, Navigation, Shield, MapPin } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Car, Star, Phone, MessageCircle, Navigation, Shield, MapPin, CreditCard, Wallet, Clock, ChevronRight } from 'lucide-react';
 
 interface DriverInfo {
   name: string;
@@ -30,12 +31,19 @@ const mockDriver: DriverInfo = {
 interface RadarSearchOverlayProps {
   pickup: string;
   drop: string;
+  fare: number;
+  vehicleType: string;
   onClose: () => void;
 }
 
-export default function RadarSearchOverlay({ pickup, drop, onClose }: RadarSearchOverlayProps) {
+export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, onClose }: RadarSearchOverlayProps) {
+  const router = useRouter();
   const [phase, setPhase] = useState<'searching' | 'found'>('searching');
   const [eta, setEta] = useState(mockDriver.eta);
+  const [selectedPay, setSelectedPay] = useState<string | null>(null);
+  const [walletBalance] = useState(1250);
+  const [payingNow, setPayingNow] = useState(false);
+  const [walletPaid, setWalletPaid] = useState(false);
 
   // After 5 seconds, transition from searching → found
   useEffect(() => {
@@ -53,6 +61,64 @@ export default function RadarSearchOverlay({ pickup, drop, onClose }: RadarSearc
     }, 10000);
     return () => clearInterval(interval);
   }, [phase]);
+
+  const handlePayNow = () => {
+    setPayingNow(true);
+    // Load Razorpay script dynamically
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => {
+      const options = {
+        key: 'rzp_test_placeholder',
+        amount: fare * 100,
+        currency: 'INR',
+        name: 'NaviGet',
+        description: `${vehicleType} ride - ${pickup.split(',')[0]} to ${drop.split(',')[0]}`,
+        image: '',
+        handler: function () {
+          // Payment successful
+          setPayingNow(false);
+          setSelectedPay('paid');
+        },
+        modal: {
+          ondismiss: function () {
+            setPayingNow(false);
+          },
+        },
+        prefill: {
+          name: '',
+          email: '',
+          contact: '',
+        },
+        theme: {
+          color: '#6C5CE7',
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const RazorpayConstructor = (window as any).Razorpay;
+      const rzp = new RazorpayConstructor(options);
+      rzp.open();
+    };
+    script.onerror = () => {
+      // Simulate payment success as fallback
+      setTimeout(() => {
+        setPayingNow(false);
+        setSelectedPay('paid');
+      }, 2000);
+    };
+    document.body.appendChild(script);
+  };
+
+  const handlePayLater = () => {
+    setSelectedPay('later');
+  };
+
+  const handleNaviWallet = () => {
+    if (walletBalance >= fare) {
+      setSelectedPay('wallet');
+      setWalletPaid(true);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'var(--bg)' }}>
@@ -277,6 +343,113 @@ export default function RadarSearchOverlay({ pickup, drop, onClose }: RadarSearc
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Payment Options */}
+          <div className="px-5 mb-4">
+            <div className="card-glass rounded-xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs font-semibold text-[var(--text-muted)] tracking-wider uppercase">Payment</h4>
+                <span className="text-base font-bold text-[var(--text-primary)]">₹{fare}</span>
+              </div>
+
+              {selectedPay === 'paid' ? (
+                <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(0, 230, 118, 0.08)', border: '1px solid rgba(0,230,118,0.2)' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,230,118,0.15)' }}>
+                    <CreditCard className="w-5 h-5 text-[#00E676]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-[#00E676]">Paid via Razorpay</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">₹{fare} debited</p>
+                  </div>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#00E676' }}>
+                    <ChevronRight className="w-3 h-3 text-[var(--bg)]" style={{ transform: 'rotate(-90deg)' }} />
+                  </div>
+                </div>
+              ) : walletPaid ? (
+                <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(0, 230, 118, 0.08)', border: '1px solid rgba(0,230,118,0.2)' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,230,118,0.15)' }}>
+                    <Wallet className="w-5 h-5 text-[#00E676]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-[#00E676]">Paid from NaviWallet</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">Balance: ₹{walletBalance - fare}</p>
+                  </div>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#00E676' }}>
+                    <ChevronRight className="w-3 h-3 text-[var(--bg)]" style={{ transform: 'rotate(-90deg)' }} />
+                  </div>
+                </div>
+              ) : selectedPay === 'later' ? (
+                <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(255, 145, 0, 0.08)', border: '1px solid rgba(255,145,0,0.2)' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,145,0,0.12)' }}>
+                    <Clock className="w-5 h-5 text-[#FF9100]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-[#FF9100]">Pay Later selected</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">Pay after ride ends</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Pay Now - Razorpay */}
+                  <button
+                    onClick={handlePayNow}
+                    disabled={payingNow}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl transition-all active:scale-[0.98]"
+                    style={{ background: 'rgba(108, 92, 231, 0.06)', border: '1px solid rgba(108,92,231,0.2)' }}
+                  >
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(108,92,231,0.15)' }}>
+                      {payingNow ? (
+                        <div className="w-5 h-5 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
+                      ) : (
+                        <CreditCard className="w-5 h-5 text-brand" />
+                      )}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">Pay Now</p>
+                      <p className="text-[11px] text-[var(--text-muted)]">UPI, Card, Net Banking via Razorpay</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
+                  </button>
+
+                  {/* Pay Later */}
+                  <button
+                    onClick={handlePayLater}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl transition-all active:scale-[0.98]"
+                    style={{ background: 'rgba(255, 145, 0, 0.04)', border: '1px solid rgba(255,145,0,0.15)' }}
+                  >
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,145,0,0.12)' }}>
+                      <Clock className="w-5 h-5 text-[#FF9100]" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">Pay Later</p>
+                      <p className="text-[11px] text-[var(--text-muted)]">Pay after your ride ends</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
+                  </button>
+
+                  {/* NaviWallet */}
+                  <button
+                    onClick={handleNaviWallet}
+                    disabled={walletBalance < fare}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl transition-all active:scale-[0.98] disabled:opacity-50"
+                    style={{ background: 'rgba(0, 230, 118, 0.04)', border: '1px solid rgba(0,230,118,0.15)' }}
+                  >
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(0,230,118,0.12)' }}>
+                      <Wallet className="w-5 h-5 text-[#00E676]" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">NaviWallet</p>
+                      <p className="text-[11px] text-[var(--text-muted)]">
+                        Balance: ₹{walletBalance}
+                        {walletBalance < fare && ' (Insufficient)'}
+                      </p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

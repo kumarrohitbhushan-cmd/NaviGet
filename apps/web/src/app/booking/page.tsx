@@ -279,10 +279,12 @@ export default function BookingPage() {
       )}
 
       {/* ===== RADAR SEARCH OVERLAY ===== */}
-      {showRadar && (
+      {showRadar && selectedVehicle && (
         <RadarSearchOverlay
           pickup={pickup}
           drop={drop}
+          fare={selectedVehicle.fare}
+          vehicleType={selectedVehicle.type}
           onClose={() => setShowRadar(false)}
         />
       )}
