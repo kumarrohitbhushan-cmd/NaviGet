@@ -249,66 +249,71 @@ html { background: #FFFFFF; }
     50% { opacity: 1; transform: scale(1.2); }
   }
 
-  /* ===== Radar Search Animation (matching mobile) ===== */
+  /* ===== Radar Search Animation (enhanced vibrant) ===== */
 
-  /* Static guide rings */
+  /* Static guide rings — brighter, gradient feel */
   .radar-guide-ring {
     position: absolute;
     border-radius: 50%;
-    border: 1px solid rgba(108, 92, 231, 0.18);
+    border: 1.5px solid rgba(108, 92, 231, 0.22);
+    background: radial-gradient(circle, rgba(108, 92, 231, 0.02) 0%, transparent 70%);
   }
 
-  /* Cross-hair lines */
+  /* Cross-hair lines — slightly bolder */
   .radar-crosshair-h {
     position: absolute;
     width: 100%;
     height: 1px;
-    background: rgba(108, 92, 231, 0.1);
+    background: linear-gradient(90deg, transparent 5%, rgba(108, 92, 231, 0.15) 30%, rgba(108, 92, 231, 0.15) 70%, transparent 95%);
   }
   .radar-crosshair-v {
     position: absolute;
     width: 1px;
     height: 100%;
-    background: rgba(108, 92, 231, 0.1);
+    background: linear-gradient(180deg, transparent 5%, rgba(108, 92, 231, 0.15) 30%, rgba(108, 92, 231, 0.15) 70%, transparent 95%);
   }
 
-  /* Expanding sonar pulse rings */
+  /* Expanding sonar pulse rings — more vivid */
   .radar-pulse {
     position: absolute;
     border-radius: 50%;
-    border: 2px solid rgba(108, 92, 231, 0.35);
-    animation: radarPulse 2.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+    border: 2px solid rgba(108, 92, 231, 0.45);
+    box-shadow: 0 0 6px rgba(108, 92, 231, 0.15);
+    animation: radarPulse 2.6s cubic-bezier(0, 0, 0.2, 1) infinite;
   }
   .radar-pulse-1 { animation-delay: 0s; }
-  .radar-pulse-2 { animation-delay: 0.7s; }
-  .radar-pulse-3 { animation-delay: 1.4s; }
-  .radar-pulse-4 { animation-delay: 2.1s; }
+  .radar-pulse-2 { animation-delay: 0.65s; }
+  .radar-pulse-3 { animation-delay: 1.3s; }
+  .radar-pulse-4 { animation-delay: 1.95s; }
 
   @keyframes radarPulse {
     0% {
-      width: 40px; height: 40px;
-      opacity: 0.7;
+      width: 30px; height: 30px;
+      opacity: 0.85;
+      border-color: rgba(108, 92, 231, 0.55);
     }
-    30% { opacity: 0.5; }
+    25% { opacity: 0.6; }
     100% {
-      width: 290px; height: 290px;
+      width: 300px; height: 300px;
       opacity: 0;
+      border-color: rgba(108, 92, 231, 0.1);
     }
   }
 
-  /* Sweep line rotation */
+  /* Sweep line rotation — richer gradient trail */
   .radar-sweep {
     position: absolute;
     top: 50%; left: 50%;
     width: 50%; height: 50%;
     transform-origin: 0% 0%;
-    animation: radarSweep 3s linear infinite;
+    animation: radarSweep 2.8s linear infinite;
     background: conic-gradient(
       from 0deg,
       transparent 0deg,
-      rgba(108, 92, 231, 0.08) 30deg,
-      rgba(108, 92, 231, 0.02) 60deg,
-      transparent 80deg
+      rgba(108, 92, 231, 0.18) 20deg,
+      rgba(108, 92, 231, 0.10) 40deg,
+      rgba(108, 92, 231, 0.03) 70deg,
+      transparent 90deg
     );
     border-radius: 0 100% 0 0;
   }
@@ -318,14 +323,15 @@ html { background: #FFFFFF; }
     100% { transform: rotate(360deg); }
   }
 
-  /* Vehicle icon dots on radar */
+  /* Vehicle icon dots on radar — refined with glow */
   .radar-vehicle {
     position: absolute;
     z-index: 5;
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    background: var(--brand);
+    background: linear-gradient(135deg, var(--brand) 0%, #8B7CF7 100%);
+    box-shadow: 0 0 8px rgba(108, 92, 231, 0.35), 0 2px 4px rgba(0,0,0,0.1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -341,23 +347,23 @@ html { background: #FFFFFF; }
   .radar-vehicle-7 { animation: vehicleBlink 2.9s ease-in-out infinite 0.3s; }
 
   @keyframes vehicleBlink {
-    0%, 100% { opacity: 0.3; transform: scale(0.9); }
-    50% { opacity: 1; transform: scale(1.05); }
+    0%, 100% { opacity: 0.25; transform: scale(0.85); box-shadow: 0 0 4px rgba(108,92,231,0.1); }
+    50% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 14px rgba(108,92,231,0.45); }
   }
 
-  /* Center glow pulse */
+  /* Center glow pulse — bigger, warmer glow */
   .radar-center-glow {
     position: absolute;
-    width: 80px;
-    height: 80px;
+    width: 90px;
+    height: 90px;
     border-radius: 50%;
-    background: rgba(108, 92, 231, 0.08);
+    background: radial-gradient(circle, rgba(108, 92, 231, 0.14) 0%, rgba(108, 92, 231, 0.04) 50%, transparent 75%);
     animation: centerGlow 2s ease-in-out infinite;
   }
 
   @keyframes centerGlow {
-    0%, 100% { transform: scale(0.9); opacity: 0.5; }
-    50% { transform: scale(1.15); opacity: 1; }
+    0%, 100% { transform: scale(0.85); opacity: 0.4; }
+    50% { transform: scale(1.2); opacity: 1; }
   }
 
   /* Animated dots "..." */

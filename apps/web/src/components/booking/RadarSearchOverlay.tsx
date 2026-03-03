@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Car, Star, Phone, MessageCircle, Navigation, Shield, MapPin, CreditCard, Wallet, Clock, ChevronRight, X, CheckCircle2, Bike, Bus, Users, Crosshair, Share2 } from 'lucide-react';
+import { Star, Phone, MessageCircle, Navigation, Shield, CreditCard, Wallet, Clock, ChevronRight, X, CheckCircle2, Share2 } from 'lucide-react';
 
 interface DriverInfo {
   name: string;
@@ -28,18 +28,29 @@ const mockDriver: DriverInfo = {
   otp: '4829',
 };
 
-// Vehicle spots on radar (angle in degrees, radius from center, icon)
+// Minimalist car icon SVG for radar spots
+function MiniCarIcon({ size = 16, color = '#6C5CE7' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none">
+      <rect x="3" y="8" width="14" height="6" rx="2" fill={color} opacity="0.9" />
+      <path d="M5 8V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1" stroke={color} strokeWidth="1.2" fill="none" />
+      <circle cx="6.5" cy="14" r="1.5" fill="white" stroke={color} strokeWidth="0.8" />
+      <circle cx="13.5" cy="14" r="1.5" fill="white" stroke={color} strokeWidth="0.8" />
+    </svg>
+  );
+}
+
+// Vehicle spots on radar (angle, radius)
 const VEHICLE_SPOTS = [
-  { angle: 30, radius: 50, icon: '🚗', label: 'car' },
-  { angle: 110, radius: 90, icon: '🚲', label: 'bike' },
-  { angle: 200, radius: 70, icon: '🚗', label: 'car' },
-  { angle: 310, radius: 100, icon: '🚌', label: 'bus' },
-  { angle: 160, radius: 120, icon: '🚗', label: 'sedan' },
-  { angle: 70, radius: 130, icon: '🚲', label: 'bike' },
-  { angle: 250, radius: 55, icon: '🚗', label: 'car' },
+  { angle: 30, radius: 50 },
+  { angle: 110, radius: 85 },
+  { angle: 195, radius: 65 },
+  { angle: 310, radius: 95 },
+  { angle: 160, radius: 115 },
+  { angle: 70, radius: 125 },
+  { angle: 250, radius: 55 },
 ];
 
-// Static guide ring radii
 const GUIDE_RADII = [50, 90, 130];
 
 interface RadarSearchOverlayProps {
@@ -69,9 +80,7 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, pi
 
   useEffect(() => {
     if (phase !== 'found') return;
-    const interval = setInterval(() => {
-      setEta((prev) => (prev <= 1 ? 1 : prev - 1));
-    }, 10000);
+    const interval = setInterval(() => { setEta((prev) => (prev <= 1 ? 1 : prev - 1)); }, 10000);
     return () => clearInterval(interval);
   }, [phase]);
 
@@ -82,120 +91,70 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, pi
     script.onload = () => {
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_SMIZyCKFSoApcm',
-        amount: fare * 100,
-        currency: 'INR',
-        name: 'NaviGet',
-        description: `${vehicleType} ride - ${pickup.split(',')[0]} to ${drop.split(',')[0]}`,
-        image: '',
-        handler: function () {
-          setPayingNow(false);
-          setSelectedPay('paid');
-        },
+        amount: fare * 100, currency: 'INR', name: 'NaviGet',
+        description: `${vehicleType} ride`, image: '',
+        handler: function () { setPayingNow(false); setSelectedPay('paid'); },
         modal: { ondismiss: function () { setPayingNow(false); } },
         prefill: { name: '', email: '', contact: '' },
-        theme: { color: '#000000' },
+        theme: { color: '#6C5CE7' },
       };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const RazorpayConstructor = (window as any).Razorpay;
-      const rzp = new RazorpayConstructor(options);
-      rzp.open();
+      const rzp = new RazorpayConstructor(options); rzp.open();
     };
-    script.onerror = () => {
-      setTimeout(() => {
-        setPayingNow(false);
-        setSelectedPay('paid');
-      }, 2000);
-    };
+    script.onerror = () => { setTimeout(() => { setPayingNow(false); setSelectedPay('paid'); }, 2000); };
     document.body.appendChild(script);
   };
 
   const handlePayLater = () => setSelectedPay('later');
-
-  const handleNaviWallet = () => {
-    if (walletBalance >= fare) {
-      setSelectedPay('wallet');
-      setWalletPaid(true);
-    }
-  };
+  const handleNaviWallet = () => { if (walletBalance >= fare) { setSelectedPay('wallet'); setWalletPaid(true); } };
 
   const handleTrackRide = () => {
-    sessionStorage.setItem('booking_data', JSON.stringify({
-      pickup, drop, pickupCoords, dropCoords, vehicleType, fare,
-      otp: mockDriver.otp, driverName: mockDriver.name,
-    }));
+    sessionStorage.setItem('booking_data', JSON.stringify({ pickup, drop, pickupCoords, dropCoords, vehicleType, fare, otp: mockDriver.otp, driverName: mockDriver.name }));
     router.push('/booking/tracking');
   };
 
-  const handleCancelRide = () => {
-    setShowCancelConfirm(true);
-  };
-
-  const confirmCancel = () => {
-    setShowCancelConfirm(false);
-    onClose();
-  };
+  const handleCancelRide = () => setShowCancelConfirm(true);
+  const confirmCancel = () => { setShowCancelConfirm(false); onClose(); };
 
   const handleShareRide = async () => {
-    const text = `I'm taking a NaviGet ${vehicleType} ride from ${pickup.split(',')[0]} to ${drop.split(',')[0]}. Fare: ₹${fare}. OTP: ${mockDriver.otp}`;
-    if (navigator.share) {
-      try { await navigator.share({ title: 'NaviGet Ride', text }); } catch {}
-    } else {
-      await navigator.clipboard.writeText(text);
-      alert('Ride details copied to clipboard!');
-    }
+    const text = `I'm taking a NaviGet ${vehicleType} ride from ${pickup.split(',')[0]} to ${drop.split(',')[0]}. Fare: Rs.${fare}. OTP: ${mockDriver.otp}`;
+    if (navigator.share) { try { await navigator.share({ title: 'NaviGet Ride', text }); } catch {} }
+    else { await navigator.clipboard.writeText(text); alert('Ride details copied to clipboard!'); }
   };
 
   const RADAR_SIZE = 290;
 
   return (
     <div className="fixed inset-0 z-[5000] flex flex-col bg-white">
-      {/* ===== SEARCHING PHASE ===== */}
       {phase === 'searching' && (
         <div className="flex-1 flex flex-col items-center justify-center animate-fade-in px-6">
-          {/* Radar container */}
           <div className="relative flex items-center justify-center mb-8" style={{ width: RADAR_SIZE, height: RADAR_SIZE }}>
-
-            {/* Static guide rings */}
             {GUIDE_RADII.map((r, i) => (
-              <div key={`guide-${i}`} className="radar-guide-ring"
-                style={{ width: r * 2, height: r * 2, borderRadius: r }} />
+              <div key={`guide-${i}`} className="radar-guide-ring" style={{ width: r * 2, height: r * 2, borderRadius: r }} />
             ))}
-
-            {/* Cross-hair lines */}
             <div className="radar-crosshair-h" />
             <div className="radar-crosshair-v" />
-
-            {/* Expanding sonar pulse rings */}
             <div className="radar-pulse radar-pulse-1" />
             <div className="radar-pulse radar-pulse-2" />
             <div className="radar-pulse radar-pulse-3" />
             <div className="radar-pulse radar-pulse-4" />
-
-            {/* Sweep line */}
             <div className="absolute inset-0 rounded-full overflow-hidden">
               <div className="radar-sweep" />
             </div>
-
-            {/* Vehicle icons on rings */}
             {VEHICLE_SPOTS.map((v, i) => {
               const rad = (v.angle * Math.PI) / 180;
               const left = RADAR_SIZE / 2 + v.radius * Math.cos(rad) - 14;
               const top = RADAR_SIZE / 2 + v.radius * Math.sin(rad) - 14;
               return (
-                <div key={`v-${i}`} className={`radar-vehicle radar-vehicle-${i + 1}`}
-                  style={{ left, top }}>
-                  <span style={{ fontSize: 14 }}>{v.icon}</span>
+                <div key={`v-${i}`} className={`radar-vehicle radar-vehicle-${i + 1}`} style={{ left, top }}>
+                  <MiniCarIcon size={16} color="white" />
                 </div>
               );
             })}
-
-            {/* Center glow */}
             <div className="radar-center-glow" />
-
-            {/* Center icon */}
             <div className="relative z-10 w-14 h-14 rounded-full flex items-center justify-center bg-[var(--brand)]"
-              style={{ boxShadow: '0 0 16px rgba(108,92,231,0.4)' }}>
-              <Navigation className="w-6 h-6 text-white" />
+              style={{ boxShadow: '0 0 20px rgba(108,92,231,0.5)' }}>
+              <Navigation className="w-6 h-6 text-white" strokeWidth={1.8} />
             </div>
           </div>
 
@@ -205,44 +164,34 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, pi
           </div>
           <p className="text-sm text-[var(--text-secondary)] mb-6">Matching with nearby drivers</p>
 
-          {/* Info chips */}
           <div className="flex flex-wrap justify-center gap-2 mb-10">
-            {['₹0 cancellation', 'Fixed fare', vehicleType.toUpperCase()].map((text) => (
+            {['₹0 cancellation', 'Fixed fare', vehicleType].map((text) => (
               <span key={text} className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-[var(--brand)] bg-[#F3F0FF] border border-[rgba(108,92,231,0.15)]">
                 {text}
               </span>
             ))}
           </div>
 
-          <button
-            onClick={onClose}
-            className="px-8 py-3 rounded-xl text-sm font-medium text-red-500 bg-red-50/60 border border-red-100 transition-all active:scale-[0.98]"
-          >
+          <button onClick={onClose}
+            className="px-8 py-3 rounded-xl text-sm font-medium text-red-500 bg-red-50/60 border border-red-100 transition-all active:scale-[0.98]">
             Cancel search
           </button>
         </div>
       )}
 
-      {/* ===== FOUND PHASE ===== */}
       {phase === 'found' && (
         <div className="flex-1 flex flex-col animate-fade-in overflow-y-auto">
-          {/* Top bar */}
           <div className="sticky top-0 bg-white z-10 px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[#059669] animate-pulse" />
               <span className="text-sm font-semibold text-[var(--text-primary)]">Ride Confirmed</span>
             </div>
-            <div className="px-3 py-1 rounded-full bg-[#F6F6F6] text-xs font-bold text-[var(--text-primary)]">
-              {eta} min away
-            </div>
+            <div className="px-3 py-1 rounded-full bg-[var(--surface-3)] text-xs font-bold text-[var(--text-primary)]">{eta} min away</div>
           </div>
 
-          {/* Driver card */}
           <div className="px-5 pt-5 pb-4">
             <div className="flex items-center gap-4 mb-5">
-              <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-white bg-[var(--text-primary)]">
-                {mockDriver.avatar}
-              </div>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-white bg-[var(--text-primary)]">{mockDriver.avatar}</div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-base font-bold text-[var(--text-primary)]">{mockDriver.name}</h3>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -253,45 +202,38 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, pi
                 </div>
               </div>
               <div className="flex gap-2">
-                <button className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F6F6F6] transition-all active:scale-90">
-                  <Phone className="w-4 h-4 text-[var(--text-primary)]" />
+                <button className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--surface-3)] transition-all active:scale-90">
+                  <Phone className="w-4 h-4 text-[var(--text-primary)]" strokeWidth={1.8} />
                 </button>
-                <button className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F6F6F6] transition-all active:scale-90">
-                  <MessageCircle className="w-4 h-4 text-[var(--text-primary)]" />
+                <button className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--surface-3)] transition-all active:scale-90">
+                  <MessageCircle className="w-4 h-4 text-[var(--text-primary)]" strokeWidth={1.8} />
                 </button>
               </div>
             </div>
 
-            {/* Vehicle info */}
-            <div className="rounded-xl bg-[#F6F6F6] p-3.5 mb-4 flex items-center gap-3">
-              <Car className="w-5 h-5 text-[var(--text-secondary)]" />
+            <div className="rounded-xl bg-[var(--surface-3)] p-3.5 mb-4 flex items-center gap-3">
+              <MiniCarIcon size={24} color="var(--text-secondary)" />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-[var(--text-primary)]">{mockDriver.vehicleModel}</p>
                 <p className="text-xs text-[var(--text-muted)]">{mockDriver.vehicleColor} · {mockDriver.vehiclePlate}</p>
               </div>
             </div>
 
-            {/* OTP */}
-            <div className="rounded-xl bg-[#F6F6F6] p-4 flex items-center justify-between">
+            <div className="rounded-xl bg-[var(--surface-3)] p-4 flex items-center justify-between">
               <div>
                 <p className="text-xs text-[var(--text-muted)] mb-2">Share OTP with driver</p>
                 <div className="flex gap-2">
                   {mockDriver.otp.split('').map((digit, i) => (
-                    <span key={i} className="w-10 h-11 rounded-lg flex items-center justify-center text-lg font-bold text-[var(--text-primary)] bg-white"
-                      style={{ border: '1px solid var(--border)' }}>
-                      {digit}
-                    </span>
+                    <span key={i} className="w-10 h-11 rounded-lg flex items-center justify-center text-lg font-bold text-[var(--text-primary)] bg-white border-2 border-[var(--border)]">{digit}</span>
                   ))}
                 </div>
               </div>
-              <Shield className="w-5 h-5 text-[var(--text-muted)]" />
+              <Shield className="w-5 h-5 text-[var(--text-muted)]" strokeWidth={1.8} />
             </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-2 bg-[#F6F6F6]" />
+          <div className="h-2 bg-[var(--surface-3)]" />
 
-          {/* Route summary */}
           <div className="px-5 py-4">
             <div className="flex gap-3">
               <div className="flex flex-col items-center gap-1 pt-1">
@@ -312,14 +254,12 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, pi
             </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-2 bg-[#F6F6F6]" />
+          <div className="h-2 bg-[var(--surface-3)]" />
 
-          {/* Payment */}
           <div className="px-5 py-4">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-bold text-[var(--text-primary)]">Payment</h4>
-              <span className="text-base font-bold text-[var(--text-primary)]">₹{fare}</span>
+              <span className="text-base font-bold text-[var(--text-primary)]">Rs.{fare}</span>
             </div>
 
             {selectedPay === 'paid' ? (
@@ -327,7 +267,7 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, pi
                 <CheckCircle2 className="w-5 h-5 text-[#059669]" />
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-[#059669]">Paid via Razorpay</p>
-                  <p className="text-[11px] text-[var(--text-muted)]">₹{fare} debited</p>
+                  <p className="text-[11px] text-[var(--text-muted)]">Rs.{fare} debited</p>
                 </div>
               </div>
             ) : walletPaid ? (
@@ -335,7 +275,7 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, pi
                 <CheckCircle2 className="w-5 h-5 text-[#059669]" />
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-[#059669]">Paid from NaviWallet</p>
-                  <p className="text-[11px] text-[var(--text-muted)]">Balance: ₹{walletBalance - fare}</p>
+                  <p className="text-[11px] text-[var(--text-muted)]">Balance: Rs.{walletBalance - fare}</p>
                 </div>
               </div>
             ) : selectedPay === 'later' ? (
@@ -348,11 +288,9 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, pi
               </div>
             ) : (
               <div className="space-y-2">
-                {/* Cash / Pay Later */}
-                <button onClick={handlePayLater}
-                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-[#F6F6F6] transition-all active:scale-[0.98]">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white" style={{ border: '1px solid var(--border)' }}>
-                    <Clock className="w-5 h-5 text-[var(--text-primary)]" />
+                <button onClick={handlePayLater} className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-[var(--surface-3)] transition-all active:scale-[0.98]">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-[var(--border)]">
+                    <Clock className="w-5 h-5 text-[var(--text-primary)]" strokeWidth={1.8} />
                   </div>
                   <div className="flex-1 text-left">
                     <p className="text-sm font-semibold text-[var(--text-primary)]">Cash / Pay Later</p>
@@ -360,34 +298,25 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, pi
                   </div>
                   <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
                 </button>
-
-                {/* NaviWallet */}
                 <button onClick={handleNaviWallet} disabled={walletBalance < fare}
-                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-[#F6F6F6] transition-all active:scale-[0.98] disabled:opacity-50">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white" style={{ border: '1px solid var(--border)' }}>
-                    <Wallet className="w-5 h-5 text-[var(--text-primary)]" />
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-[var(--surface-3)] transition-all active:scale-[0.98] disabled:opacity-50">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-[var(--border)]">
+                    <Wallet className="w-5 h-5 text-[var(--text-primary)]" strokeWidth={1.8} />
                   </div>
                   <div className="flex-1 text-left">
                     <p className="text-sm font-semibold text-[var(--text-primary)]">NaviWallet</p>
-                    <p className="text-[11px] text-[var(--text-muted)]">
-                      Balance: ₹{walletBalance}{walletBalance < fare && ' (Insufficient)'}
-                    </p>
+                    <p className="text-[11px] text-[var(--text-muted)]">Balance: Rs.{walletBalance}{walletBalance < fare && ' (Insufficient)'}</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
                 </button>
-
-                {/* Pay Now / Pay Online */}
                 <button onClick={handlePayNow} disabled={payingNow}
-                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-[#F6F6F6] transition-all active:scale-[0.98]">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white" style={{ border: '1px solid var(--border)' }}>
-                    {payingNow ? (
-                      <div className="w-5 h-5 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
-                    ) : (
-                      <CreditCard className="w-5 h-5 text-[var(--text-primary)]" />
-                    )}
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-[var(--surface-3)] transition-all active:scale-[0.98]">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-[var(--border)]">
+                    {payingNow ? <div className="w-5 h-5 border-2 border-gray-300 border-t-[var(--brand)] rounded-full animate-spin" />
+                      : <CreditCard className="w-5 h-5 text-[var(--text-primary)]" strokeWidth={1.8} />}
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">Pay Now / Pay Online</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">Pay Online</p>
                     <p className="text-[11px] text-[var(--text-muted)]">UPI, Card, Net Banking</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
@@ -396,59 +325,42 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, pi
             )}
           </div>
 
-          {/* Bottom actions */}
           <div className="mt-auto px-5 pb-6 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-            {/* Track / Confirm button */}
             {selectedPay ? (
-              <button onClick={handleTrackRide}
-                className="btn-primary flex items-center justify-center gap-2 mb-3">
-                <Navigation className="w-4 h-4" />
-                Track your ride
+              <button onClick={handleTrackRide} className="btn-primary flex items-center justify-center gap-2 mb-3">
+                <Navigation className="w-4 h-4" strokeWidth={1.8} /> Track your ride
               </button>
             ) : (
-              <button onClick={handleTrackRide}
-                className="btn-primary flex items-center justify-center gap-2 mb-3">
-                <Navigation className="w-4 h-4" />
-                Pay ₹{fare} & Confirm
+              <button onClick={handleTrackRide} className="btn-primary flex items-center justify-center gap-2 mb-3">
+                <Navigation className="w-4 h-4" strokeWidth={1.8} /> Pay Rs.{fare} & Confirm
               </button>
             )}
-
             <div className="flex gap-3">
               <button onClick={handleShareRide}
-                className="flex-1 py-3 rounded-xl text-sm font-medium text-[var(--text-primary)]
-                         flex items-center justify-center gap-2 bg-[#F6F6F6] transition-all active:scale-[0.98]">
-                <Share2 className="w-4 h-4" />
-                Share
+                className="flex-1 py-3 rounded-xl text-sm font-medium text-[var(--text-primary)] flex items-center justify-center gap-2 bg-[var(--surface-3)] transition-all active:scale-[0.98]">
+                <Share2 className="w-4 h-4" strokeWidth={1.8} /> Share
               </button>
               <button onClick={handleCancelRide}
-                className="flex-1 py-3 rounded-xl text-sm font-medium text-red-500
-                         flex items-center justify-center gap-2 bg-red-50 transition-all active:scale-[0.98]">
+                className="flex-1 py-3 rounded-xl text-sm font-medium text-red-500 flex items-center justify-center gap-2 bg-red-50 transition-all active:scale-[0.98]">
                 Cancel ride
               </button>
             </div>
-            <p className="text-center text-[10px] text-[var(--text-muted)] mt-3">
-              ₹0 cancellation fee · Fixed fare guaranteed
-            </p>
+            <p className="text-center text-[10px] text-[var(--text-muted)] mt-3">Rs.0 cancellation fee · Fixed fare guaranteed</p>
           </div>
         </div>
       )}
 
-      {/* Cancel confirmation dialog */}
       {showCancelConfirm && (
         <div className="fixed inset-0 z-[6000] flex items-center justify-center bg-black/50 animate-fade-in">
           <div className="bg-white rounded-2xl p-6 mx-6 max-w-sm w-full shadow-xl">
             <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">Cancel Ride?</h3>
-            <p className="text-sm text-[var(--text-secondary)] mb-1">₹0 cancellation fee applies.</p>
+            <p className="text-sm text-[var(--text-secondary)] mb-1">Rs.0 cancellation fee applies.</p>
             <p className="text-xs text-[var(--text-muted)] mb-6">Your driver has already been assigned.</p>
             <div className="flex gap-3">
               <button onClick={() => setShowCancelConfirm(false)}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-[#F6F6F6] text-[var(--text-primary)] transition-all active:scale-[0.98]">
-                Keep Ride
-              </button>
+                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-[var(--surface-3)] text-[var(--text-primary)] transition-all active:scale-[0.98]">Keep Ride</button>
               <button onClick={confirmCancel}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-red-500 text-white transition-all active:scale-[0.98]">
-                Yes, Cancel
-              </button>
+                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-red-500 text-white transition-all active:scale-[0.98]">Yes, Cancel</button>
             </div>
           </div>
         </div>
