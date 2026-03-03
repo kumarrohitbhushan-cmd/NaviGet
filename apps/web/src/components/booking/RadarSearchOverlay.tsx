@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Car, Star, Phone, MessageCircle, Navigation, Shield, MapPin, CreditCard, Wallet, Clock, ChevronRight, X, CheckCircle2 } from 'lucide-react';
+import { Car, Star, Phone, MessageCircle, Navigation, Shield, MapPin, CreditCard, Wallet, Clock, ChevronRight, X, CheckCircle2, Bike, Bus, Users, Crosshair, Share2 } from 'lucide-react';
 
 interface DriverInfo {
   name: string;
@@ -28,15 +28,31 @@ const mockDriver: DriverInfo = {
   otp: '4829',
 };
 
+// Vehicle spots on radar (angle in degrees, radius from center, icon)
+const VEHICLE_SPOTS = [
+  { angle: 30, radius: 50, icon: '🚗', label: 'car' },
+  { angle: 110, radius: 90, icon: '🚲', label: 'bike' },
+  { angle: 200, radius: 70, icon: '🚗', label: 'car' },
+  { angle: 310, radius: 100, icon: '🚌', label: 'bus' },
+  { angle: 160, radius: 120, icon: '🚗', label: 'sedan' },
+  { angle: 70, radius: 130, icon: '🚲', label: 'bike' },
+  { angle: 250, radius: 55, icon: '🚗', label: 'car' },
+];
+
+// Static guide ring radii
+const GUIDE_RADII = [50, 90, 130];
+
 interface RadarSearchOverlayProps {
   pickup: string;
   drop: string;
   fare: number;
   vehicleType: string;
+  pickupCoords?: { lat: number; lng: number } | null;
+  dropCoords?: { lat: number; lng: number } | null;
   onClose: () => void;
 }
 
-export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, onClose }: RadarSearchOverlayProps) {
+export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, pickupCoords, dropCoords, onClose }: RadarSearchOverlayProps) {
   const router = useRouter();
   const [phase, setPhase] = useState<'searching' | 'found'>('searching');
   const [eta, setEta] = useState(mockDriver.eta);
@@ -44,6 +60,7 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, on
   const [walletBalance] = useState(1250);
   const [payingNow, setPayingNow] = useState(false);
   const [walletPaid, setWalletPaid] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setPhase('found'), 5000);
@@ -101,50 +118,97 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, on
     }
   };
 
+  const handleTrackRide = () => {
+    sessionStorage.setItem('booking_data', JSON.stringify({
+      pickup, drop, pickupCoords, dropCoords, vehicleType, fare,
+      otp: mockDriver.otp, driverName: mockDriver.name,
+    }));
+    router.push('/booking/tracking');
+  };
+
+  const handleCancelRide = () => {
+    setShowCancelConfirm(true);
+  };
+
+  const confirmCancel = () => {
+    setShowCancelConfirm(false);
+    onClose();
+  };
+
+  const handleShareRide = async () => {
+    const text = `I'm taking a NaviGet ${vehicleType} ride from ${pickup.split(',')[0]} to ${drop.split(',')[0]}. Fare: ₹${fare}. OTP: ${mockDriver.otp}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'NaviGet Ride', text }); } catch {}
+    } else {
+      await navigator.clipboard.writeText(text);
+      alert('Ride details copied to clipboard!');
+    }
+  };
+
+  const RADAR_SIZE = 290;
+
   return (
     <div className="fixed inset-0 z-[5000] flex flex-col bg-white">
       {/* ===== SEARCHING PHASE ===== */}
       {phase === 'searching' && (
         <div className="flex-1 flex flex-col items-center justify-center animate-fade-in px-6">
           {/* Radar container */}
-          <div className="relative w-64 h-64 flex items-center justify-center mb-8">
-            <div className="radar-ring radar-ring-1" />
-            <div className="radar-ring radar-ring-2" />
-            <div className="radar-ring radar-ring-3" />
-            <div className="radar-ring radar-ring-4" />
+          <div className="relative flex items-center justify-center mb-8" style={{ width: RADAR_SIZE, height: RADAR_SIZE }}>
 
+            {/* Static guide rings */}
+            {GUIDE_RADII.map((r, i) => (
+              <div key={`guide-${i}`} className="radar-guide-ring"
+                style={{ width: r * 2, height: r * 2, borderRadius: r }} />
+            ))}
+
+            {/* Cross-hair lines */}
+            <div className="radar-crosshair-h" />
+            <div className="radar-crosshair-v" />
+
+            {/* Expanding sonar pulse rings */}
+            <div className="radar-pulse radar-pulse-1" />
+            <div className="radar-pulse radar-pulse-2" />
+            <div className="radar-pulse radar-pulse-3" />
+            <div className="radar-pulse radar-pulse-4" />
+
+            {/* Sweep line */}
             <div className="absolute inset-0 rounded-full overflow-hidden">
               <div className="radar-sweep" />
             </div>
 
-            {/* Center icon */}
-            <div className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center bg-[var(--text-primary)]"
-              style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.2)' }}>
-              <Car className="w-9 h-9 text-white" />
-            </div>
+            {/* Vehicle icons on rings */}
+            {VEHICLE_SPOTS.map((v, i) => {
+              const rad = (v.angle * Math.PI) / 180;
+              const left = RADAR_SIZE / 2 + v.radius * Math.cos(rad) - 14;
+              const top = RADAR_SIZE / 2 + v.radius * Math.sin(rad) - 14;
+              return (
+                <div key={`v-${i}`} className={`radar-vehicle radar-vehicle-${i + 1}`}
+                  style={{ left, top }}>
+                  <span style={{ fontSize: 14 }}>{v.icon}</span>
+                </div>
+              );
+            })}
 
-            {/* Floating driver pins */}
-            <div className="driver-pin" style={{ top: '15%', left: '20%', animationDelay: '0.5s' }}>
-              <div className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-[10px] font-bold text-[var(--text-primary)]">AK</div>
-            </div>
-            <div className="driver-pin" style={{ top: '25%', right: '15%', animationDelay: '1.2s' }}>
-              <div className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-[10px] font-bold text-[var(--text-primary)]">VS</div>
-            </div>
-            <div className="driver-pin" style={{ bottom: '20%', left: '12%', animationDelay: '2s' }}>
-              <div className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-[10px] font-bold text-[var(--text-primary)]">RK</div>
-            </div>
-            <div className="driver-pin" style={{ bottom: '15%', right: '22%', animationDelay: '0.8s' }}>
-              <div className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-[10px] font-bold text-[var(--text-primary)]">MS</div>
+            {/* Center glow */}
+            <div className="radar-center-glow" />
+
+            {/* Center icon */}
+            <div className="relative z-10 w-14 h-14 rounded-full flex items-center justify-center bg-[var(--brand)]"
+              style={{ boxShadow: '0 0 16px rgba(108,92,231,0.4)' }}>
+              <Navigation className="w-6 h-6 text-white" />
             </div>
           </div>
 
-          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">Finding your ride</h2>
-          <p className="text-sm text-[var(--text-muted)] mb-6">Scanning nearby drivers...</p>
+          <div className="flex items-center gap-0 mb-1.5">
+            <h2 className="text-xl font-bold text-[var(--text-primary)]">Finding your ride</h2>
+            <span className="search-dots text-xl font-bold">...</span>
+          </div>
+          <p className="text-sm text-[var(--text-secondary)] mb-6">Matching with nearby drivers</p>
 
           {/* Info chips */}
           <div className="flex flex-wrap justify-center gap-2 mb-10">
-            {['₹0 cancellation', 'Fixed fare', 'No surge'].map((text) => (
-              <span key={text} className="px-3 py-1.5 rounded-full text-xs font-medium text-[var(--text-secondary)] bg-[#F6F6F6]">
+            {['₹0 cancellation', 'Fixed fare', vehicleType.toUpperCase()].map((text) => (
+              <span key={text} className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-[var(--brand)] bg-[#F3F0FF] border border-[rgba(108,92,231,0.15)]">
                 {text}
               </span>
             ))}
@@ -152,7 +216,7 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, on
 
           <button
             onClick={onClose}
-            className="px-8 py-3 rounded-xl text-sm font-medium text-red-500 bg-red-50 transition-all active:scale-[0.98]"
+            className="px-8 py-3 rounded-xl text-sm font-medium text-red-500 bg-red-50/60 border border-red-100 transition-all active:scale-[0.98]"
           >
             Cancel search
           </button>
@@ -278,37 +342,20 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, on
               <div className="flex items-center gap-3 p-3 rounded-xl bg-[#FFF7ED]">
                 <Clock className="w-5 h-5 text-[#D97706]" />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-[#D97706]">Pay Later / COD selected</p>
+                  <p className="text-sm font-semibold text-[#D97706]">Cash / Pay Later selected</p>
                   <p className="text-[11px] text-[var(--text-muted)]">Pay cash after ride ends</p>
                 </div>
               </div>
             ) : (
               <div className="space-y-2">
-                {/* Pay Now */}
-                <button onClick={handlePayNow} disabled={payingNow}
-                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-[#F6F6F6] transition-all active:scale-[0.98]">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white" style={{ border: '1px solid var(--border)' }}>
-                    {payingNow ? (
-                      <div className="w-5 h-5 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
-                    ) : (
-                      <CreditCard className="w-5 h-5 text-[var(--text-primary)]" />
-                    )}
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">Pay Now</p>
-                    <p className="text-[11px] text-[var(--text-muted)]">UPI, Card, Net Banking</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
-                </button>
-
-                {/* Pay Later / COD */}
+                {/* Cash / Pay Later */}
                 <button onClick={handlePayLater}
                   className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-[#F6F6F6] transition-all active:scale-[0.98]">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white" style={{ border: '1px solid var(--border)' }}>
                     <Clock className="w-5 h-5 text-[var(--text-primary)]" />
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">Pay Later / COD</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">Cash / Pay Later</p>
                     <p className="text-[11px] text-[var(--text-muted)]">Pay cash after ride</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
@@ -328,20 +375,53 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, on
                   </div>
                   <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
                 </button>
+
+                {/* Pay Now / Pay Online */}
+                <button onClick={handlePayNow} disabled={payingNow}
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-[#F6F6F6] transition-all active:scale-[0.98]">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white" style={{ border: '1px solid var(--border)' }}>
+                    {payingNow ? (
+                      <div className="w-5 h-5 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+                    ) : (
+                      <CreditCard className="w-5 h-5 text-[var(--text-primary)]" />
+                    )}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">Pay Now / Pay Online</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">UPI, Card, Net Banking</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
+                </button>
               </div>
             )}
           </div>
 
           {/* Bottom actions */}
           <div className="mt-auto px-5 pb-6 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-            <div className="flex gap-3">
-              <button className="flex-1 py-3.5 rounded-xl text-sm font-medium text-[var(--text-primary)]
-                               flex items-center justify-center gap-2 bg-[#F6F6F6] transition-all active:scale-[0.98]">
-                <Shield className="w-4 h-4" />
-                Safety
+            {/* Track / Confirm button */}
+            {selectedPay ? (
+              <button onClick={handleTrackRide}
+                className="btn-primary flex items-center justify-center gap-2 mb-3">
+                <Navigation className="w-4 h-4" />
+                Track your ride
               </button>
-              <button onClick={onClose}
-                className="flex-1 py-3.5 rounded-xl text-sm font-medium text-red-500
+            ) : (
+              <button onClick={handleTrackRide}
+                className="btn-primary flex items-center justify-center gap-2 mb-3">
+                <Navigation className="w-4 h-4" />
+                Pay ₹{fare} & Confirm
+              </button>
+            )}
+
+            <div className="flex gap-3">
+              <button onClick={handleShareRide}
+                className="flex-1 py-3 rounded-xl text-sm font-medium text-[var(--text-primary)]
+                         flex items-center justify-center gap-2 bg-[#F6F6F6] transition-all active:scale-[0.98]">
+                <Share2 className="w-4 h-4" />
+                Share
+              </button>
+              <button onClick={handleCancelRide}
+                className="flex-1 py-3 rounded-xl text-sm font-medium text-red-500
                          flex items-center justify-center gap-2 bg-red-50 transition-all active:scale-[0.98]">
                 Cancel ride
               </button>
@@ -349,6 +429,27 @@ export default function RadarSearchOverlay({ pickup, drop, fare, vehicleType, on
             <p className="text-center text-[10px] text-[var(--text-muted)] mt-3">
               ₹0 cancellation fee · Fixed fare guaranteed
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel confirmation dialog */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-[6000] flex items-center justify-center bg-black/50 animate-fade-in">
+          <div className="bg-white rounded-2xl p-6 mx-6 max-w-sm w-full shadow-xl">
+            <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">Cancel Ride?</h3>
+            <p className="text-sm text-[var(--text-secondary)] mb-1">₹0 cancellation fee applies.</p>
+            <p className="text-xs text-[var(--text-muted)] mb-6">Your driver has already been assigned.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowCancelConfirm(false)}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-[#F6F6F6] text-[var(--text-primary)] transition-all active:scale-[0.98]">
+                Keep Ride
+              </button>
+              <button onClick={confirmCancel}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-red-500 text-white transition-all active:scale-[0.98]">
+                Yes, Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

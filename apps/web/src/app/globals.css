@@ -249,42 +249,64 @@ html { background: #FFFFFF; }
     50% { opacity: 1; transform: scale(1.2); }
   }
 
-  /* ===== Radar Search Animation ===== */
-  .radar-ring {
+  /* ===== Radar Search Animation (matching mobile) ===== */
+
+  /* Static guide rings */
+  .radar-guide-ring {
     position: absolute;
     border-radius: 50%;
-    border: 2px solid rgba(108, 92, 231, 0.2);
-    animation: radarExpand 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+    border: 1px solid rgba(108, 92, 231, 0.18);
   }
 
-  .radar-ring-1 { width: 90px; height: 90px; animation-delay: 0s; }
-  .radar-ring-2 { width: 90px; height: 90px; animation-delay: 0.6s; }
-  .radar-ring-3 { width: 90px; height: 90px; animation-delay: 1.2s; }
-  .radar-ring-4 { width: 90px; height: 90px; animation-delay: 1.8s; }
+  /* Cross-hair lines */
+  .radar-crosshair-h {
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background: rgba(108, 92, 231, 0.1);
+  }
+  .radar-crosshair-v {
+    position: absolute;
+    width: 1px;
+    height: 100%;
+    background: rgba(108, 92, 231, 0.1);
+  }
 
-  @keyframes radarExpand {
+  /* Expanding sonar pulse rings */
+  .radar-pulse {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba(108, 92, 231, 0.35);
+    animation: radarPulse 2.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  .radar-pulse-1 { animation-delay: 0s; }
+  .radar-pulse-2 { animation-delay: 0.7s; }
+  .radar-pulse-3 { animation-delay: 1.4s; }
+  .radar-pulse-4 { animation-delay: 2.1s; }
+
+  @keyframes radarPulse {
     0% {
-      width: 80px; height: 80px;
-      opacity: 0.6;
-      border-color: rgba(108, 92, 231, 0.35);
+      width: 40px; height: 40px;
+      opacity: 0.7;
     }
+    30% { opacity: 0.5; }
     100% {
-      width: 260px; height: 260px;
+      width: 290px; height: 290px;
       opacity: 0;
-      border-color: rgba(108, 92, 231, 0);
     }
   }
 
+  /* Sweep line rotation */
   .radar-sweep {
     position: absolute;
     top: 50%; left: 50%;
     width: 50%; height: 50%;
     transform-origin: 0% 0%;
-    animation: radarSweep 2s linear infinite;
+    animation: radarSweep 3s linear infinite;
     background: conic-gradient(
       from 0deg,
       transparent 0deg,
-      rgba(108, 92, 231, 0.1) 30deg,
+      rgba(108, 92, 231, 0.08) 30deg,
       rgba(108, 92, 231, 0.02) 60deg,
       transparent 80deg
     );
@@ -296,15 +318,96 @@ html { background: #FFFFFF; }
     100% { transform: rotate(360deg); }
   }
 
-  .driver-pin {
+  /* Vehicle icon dots on radar */
+  .radar-vehicle {
     position: absolute;
     z-index: 5;
-    animation: driverFloat 3s ease-in-out infinite;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+  }
+  .radar-vehicle-1 { animation: vehicleBlink 2.5s ease-in-out infinite 0.2s; }
+  .radar-vehicle-2 { animation: vehicleBlink 3.1s ease-in-out infinite 0.8s; }
+  .radar-vehicle-3 { animation: vehicleBlink 2.8s ease-in-out infinite 1.5s; }
+  .radar-vehicle-4 { animation: vehicleBlink 3.4s ease-in-out infinite 0.5s; }
+  .radar-vehicle-5 { animation: vehicleBlink 2.6s ease-in-out infinite 1.2s; }
+  .radar-vehicle-6 { animation: vehicleBlink 3.0s ease-in-out infinite 1.8s; }
+  .radar-vehicle-7 { animation: vehicleBlink 2.9s ease-in-out infinite 0.3s; }
+
+  @keyframes vehicleBlink {
+    0%, 100% { opacity: 0.3; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.05); }
   }
 
-  @keyframes driverFloat {
-    0%, 100% { transform: translateY(0px); opacity: 0.6; }
-    50% { transform: translateY(-6px); opacity: 1; }
+  /* Center glow pulse */
+  .radar-center-glow {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(108, 92, 231, 0.08);
+    animation: centerGlow 2s ease-in-out infinite;
+  }
+
+  @keyframes centerGlow {
+    0%, 100% { transform: scale(0.9); opacity: 0.5; }
+    50% { transform: scale(1.15); opacity: 1; }
+  }
+
+  /* Animated dots "..." */
+  .search-dots {
+    animation: dotsPulse 1.5s ease-in-out infinite;
+    color: var(--brand);
+  }
+  @keyframes dotsPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  /* USP marquee ribbon */
+  .usp-marquee-track {
+    display: flex;
+    animation: marqueeScroll 18s linear infinite;
+  }
+  @keyframes marqueeScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* Schedule modal overlay */
+  .schedule-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 6000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Progress dots for tracking */
+  .progress-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+  }
+  .progress-segment {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    transition: all 0.3s ease;
   }
 
 }
